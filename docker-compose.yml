@@ -1,0 +1,50 @@
+version: "3.7"
+
+services:
+  pihole:
+    container_name: pihole
+    restart: unless-stopped
+    image: pihole/pihole:latest
+    environment:
+      TZ: ${TZ}
+      VIRTUAL_HOST: ${VIRTUAL_HOST}
+      WEBPASSWORD: ${WEBPASSWORD}
+    volumes:
+      - datapihole:/etc/pihole/
+      - datadnsmasqd:/etc/dnsmasq.d/
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    labels:
+      - "traefik.enable=true"
+      #
+      # load interface on https
+      - "traefik.http.routers.pihole-https.rule=Host(`${VIRTUAL_HOST}`)"
+      - "traefik.http.routers.pihole-https.entrypoints=websecure"
+      - "traefik.http.routers.pihole-https.tls=true"
+      - "traefik.http.routers.pihole-https.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+      #
+      # interface auth
+      # generate user:password
+      # sudo apt-get install apache2-utils
+      # htpasswd -nb <username> <secure_password>
+      - "traefik.http.routers.pihole-https.middlewares=pi-auth"
+      - "traefik.http.middlewares.pi-auth.basicauth.users=${DASHBOARD_USERNAME}:${DASHBOARD_PASSWORD}"
+      #
+      # load tcp/udp confs
+      - "traefik.tcp.routers.pihole-dns.entrypoints=dns"
+      - "traefik.tcp.routers.pihole-dns.service=pihole"
+      - "traefik.udp.routers.pihole-udp.entrypoints=udpdns"
+      - "traefik.udp.routers.pihole-udp.service=pihole"
+      - "traefik.udp.services.pihole.loadbalancer.server.port=53"
+    networks:
+      - web
+
+volumes:
+  datapihole:
+  datadnsmasqd:
+
+networks:
+  web:
+    external: true
