@@ -2,7 +2,7 @@
 
 This docker will setup pihole on your server.  
 To use this configuration, you will have to also run the `traefik-docker` project available [here](https://github.com/m1rkwood/traefik-docker).  
-You can also combine it with [Wireguard](https://github.com/m1rkwood/wireguard).
+You will also need to combine it with [Wireguard](https://github.com/m1rkwood/wireguard).
 
 ## Folder structure
 
